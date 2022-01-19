@@ -45,6 +45,22 @@ namespace Microsoft.Bot.Connector.Authentication
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="PasswordServiceClientCredentialFactory"/> class.
+        /// with the provided credentials.
+        /// </summary>
+        /// <param name="appId">The app ID.</param>
+        /// <param name="password">The app password.</param>
+        /// <param name="httpClient">A custom httpClient to use.</param>
+        /// <param name="logger">A logger instance to use.</param>
+        public PasswordServiceClientCredentialFactory(string appId, string password, HttpClient httpClient, ILogger logger)
+        {
+            AppId = appId;
+            Password = password;
+            _httpClient = httpClient;
+            _logger = logger;
+        }
+
+        /// <summary>
         /// Gets or sets the app ID for this credential.
         /// </summary>
         /// <value>
@@ -95,13 +111,29 @@ namespace Microsoft.Bot.Connector.Authentication
 
             if (loginEndpoint.StartsWith(AuthenticationConstants.ToChannelFromBotLoginUrlTemplate, StringComparison.OrdinalIgnoreCase))
             {
-                return Task.FromResult<ServiceClientCredentials>(new MicrosoftAppCredentials(
-                    appId, Password, TenantId, _httpClient, _logger, oauthScope));
+                if (string.IsNullOrEmpty(TenantId))
+                {
+                    return Task.FromResult<ServiceClientCredentials>(new MicrosoftAppCredentials(
+                        appId, Password, _httpClient, _logger, oauthScope));
+                }
+                else
+                {
+                    return Task.FromResult<ServiceClientCredentials>(new MicrosoftAppCredentials(
+                       appId, Password, TenantId, _httpClient, _logger, oauthScope));
+                }
             }
             else if (loginEndpoint.Equals(GovernmentAuthenticationConstants.ToChannelFromBotLoginUrl, StringComparison.OrdinalIgnoreCase))
             {
-                return Task.FromResult<ServiceClientCredentials>(new MicrosoftGovernmentAppCredentials(
-                    appId, Password, TenantId, _httpClient, _logger, oauthScope));
+                if (string.IsNullOrEmpty(TenantId))
+                {
+                    return Task.FromResult<ServiceClientCredentials>(new MicrosoftGovernmentAppCredentials(
+                        appId, Password, _httpClient, _logger, oauthScope));
+                }
+                else
+                {
+                    return Task.FromResult<ServiceClientCredentials>(new MicrosoftGovernmentAppCredentials(
+                        appId, Password, TenantId, _httpClient, _logger, oauthScope));
+                }
             }
             else
             {
